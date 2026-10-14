@@ -52,6 +52,38 @@ func openDB(path string) (*sql.DB, error) {
 		db.Close()
 		return nil, err
 	}
+	// Older databases keep their requests; metadata is added in place.
+	rows, err := db.Query("PRAGMA table_info(requests)")
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	hasMetadata := false
+	for rows.Next() {
+		var cid, notNull, pk int
+		var name, kind string
+		var defaultValue sql.NullString
+		if err := rows.Scan(&cid, &name, &kind, &notNull, &defaultValue, &pk); err != nil {
+			rows.Close()
+			db.Close()
+			return nil, err
+		}
+		if name == "metadata" {
+			hasMetadata = true
+		}
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	if !hasMetadata {
+		if _, err := db.Exec("ALTER TABLE requests ADD COLUMN metadata TEXT NOT NULL DEFAULT '{}'"); err != nil {
+			db.Close()
+			return nil, err
+		}
+	}
 	return db, nil
 }
 
@@ -140,16 +172,16 @@ func newApp(db *sql.DB) *fiber.App {
 	})
 	app.Get("/api/bins/:code/requests/:id", exists, func(c *fiber.Ctx) error {
 		var id int64
-		var method, path, query, headers, remote, at string
+		var method, path, query, headers, remote, at, metadata string
 		var body []byte
-		err := db.QueryRow("SELECT id,method,path,query,headers,body,remote,created_at FROM requests WHERE code=? AND id=?", c.Params("code"), c.Params("id")).Scan(&id, &method, &path, &query, &headers, &body, &remote, &at)
+		err := db.QueryRow("SELECT id,method,path,query,headers,body,remote,created_at,metadata FROM requests WHERE code=? AND id=?", c.Params("code"), c.Params("id")).Scan(&id, &method, &path, &query, &headers, &body, &remote, &at, &metadata)
 		if errors.Is(err, sql.ErrNoRows) {
 			return fiber.ErrNotFound
 		}
 		if err != nil {
 			return err
 		}
-		return c.JSON(fiber.Map{"id": id, "method": method, "path": path, "query": query, "headers": json.RawMessage(headers), "body": string(body), "body_base64": base64.StdEncoding.EncodeToString(body), "size": len(body), "remote": remote, "created_at": at})
+		return c.JSON(fiber.Map{"id": id, "method": method, "path": path, "query": query, "headers": json.RawMessage(headers), "metadata": json.RawMessage(metadata), "body": string(body), "body_base64": base64.StdEncoding.EncodeToString(body), "size": len(body), "remote": remote, "created_at": at})
 	})
 	app.Delete("/api/bins/:code/requests", exists, func(c *fiber.Ctx) error {
 		if _, err := db.Exec("DELETE FROM requests WHERE code=?", c.Params("code")); err != nil {
@@ -168,7 +200,11 @@ func newApp(db *sql.DB) *fiber.App {
 		if body == nil {
 			body = []byte{}
 		}
-		_, err = db.Exec("INSERT INTO requests(code,method,path,query,headers,body,remote,created_at) VALUES (?,?,?,?,?,?,?,?)", c.Params("code"), c.Method(), c.Path(), string(c.Request().URI().QueryString()), string(h), body, c.IP(), time.Now().UTC().Format(time.RFC3339Nano))
+		metadata, err := json.Marshal(fiber.Map{"host": string(c.Request().Host()), "scheme": c.Protocol(), "request_uri": string(c.Request().RequestURI()), "http_version": string(c.Request().Header.Protocol()), "remote_addr": c.Context().RemoteAddr().String()})
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec("INSERT INTO requests(code,method,path,query,headers,body,remote,created_at,metadata) VALUES (?,?,?,?,?,?,?,?,?)", c.Params("code"), c.Method(), c.Path(), string(c.Request().URI().QueryString()), string(h), body, c.IP(), time.Now().UTC().Format(time.RFC3339Nano), string(metadata))
 		if err != nil {
 			return err
 		}

@@ -18,7 +18,9 @@ curl -X POST http://localhost:8080/<code> \
 
 `/<code>` dan `/<code>/path/tambahan` menerima semua HTTP method, termasuk GET, DELETE, dan OPTIONS. Respons sukses `200 {"received":true}` diberikan setelah SQLite menyimpan data. Kode yang belum dibuat memberikan 404.
 
-Inspector otomatis memeriksa request baru setiap 2 detik, menampilkan 100 terbaru dan tombol untuk memuat halaman sebelumnya. Bisa melihat body (JSON diformat otomatis), headers, query berulang, waktu, IP peer, serta download body asli termasuk payload biner.
+Inspector otomatis memeriksa request baru setiap 2 detik, menampilkan 100 terbaru dan tombol untuk memuat halaman sebelumnya. Preview menampilkan URL lengkap, request ID, host, IP/alamat peer, versi HTTP, waktu lokal dan UTC, ukuran body, Content-Type, serta User-Agent. Header dan query berulang ditampilkan dalam tabel, termasuk query mentah. Body bisa dilihat sebagai formatted JSON, raw text, atau hex untuk payload biner; tersedia salin body, salin detail JSON, dan download byte asli.
+
+Database versi awal otomatis dimigrasikan tanpa menghapus request. Metadata tambahan hanya tersedia untuk callback baru; request lama menampilkan informasi yang memang sudah direkam. Versi HTTP adalah koneksi yang diterima aplikasi (bisa HTTP/1.1 dari reverse proxy walau pengirim memakai HTTP/2). Scheme mengikuti informasi request/proxy yang diterima, dan bukan verifikasi koneksi TLS pengirim. GeoIP dan durasi proses tidak ditampilkan karena belum direkam.
 
 ## Deploy Docker
 
