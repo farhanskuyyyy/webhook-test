@@ -6,7 +6,7 @@ COPY . .
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /hookdesk .
 
 FROM alpine:3.22
-RUN addgroup -g 10001 hookdesk && adduser -D -u 10001 -G hookdesk hookdesk && mkdir /data && chown hookdesk:hookdesk /data
+RUN apk add --no-cache ca-certificates && addgroup -g 10001 hookdesk && adduser -D -u 10001 -G hookdesk hookdesk && mkdir /data && chown hookdesk:hookdesk /data
 COPY --from=build /hookdesk /usr/local/bin/hookdesk
 USER hookdesk
 ENV PORT=8080 DB_PATH=/data/webhooks.db

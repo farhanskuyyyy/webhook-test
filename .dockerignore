@@ -3,3 +3,5 @@ data
 *.db*
 *.exe
 hookdesk
+*.mmdb
+*.mmdb.gz

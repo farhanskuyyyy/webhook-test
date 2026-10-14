@@ -19,3 +19,13 @@ PASS - Purpose gate: metadata/header tables reproduce the information hierarchy 
 PASS - Liveliness: ENERGY 1 / RHYTHM 2 / MOTION 1 unchanged. Compact metadata, expanded header area, and separated payload sections establish rhythm; the request URL anchors the detail view. Screenshot visually inspected after browser tests.
 
 PASS - Craftsmanship: actual URL, host, peer address, HTTP version, local/UTC timestamps, size, content type and user agent shown. Missing metadata on older requests labeled accurately. Binary and empty payloads, repeated queries, reopening, offline feedback and reduced-motion setting checked. Go tests include legacy schema migration twice, preserved old data, persisted metadata and text encoding. go test, go vet and native build pass. Live deployment requires a rebuild of the Docker image.
+
+## GeoIP update
+
+PASS - Hard gate: new location row uses textContent and real local MMDB results. Live DB-IP download succeeded; Chromium showed the public-IP country/region/city and private-IP message, with no script errors or horizontal overflow at 375/768/1024/1440px. DB-IP attribution is a working external link.
+
+PASS - Purpose gate: location sits beside sender IP in the existing summary, with peer IP retained separately to make reverse proxy behavior visible. No map, decorative assets or additional navigation introduced.
+
+PASS - Liveliness: existing ENERGY 1 / RHYTHM 2 / MOTION 1 and metadata table hierarchy retained.
+
+PASS - Craftsmanship: unit tests generate a small MMDB fixture to verify city/region/country parsing, missing/public/private states, gzip download and invalid content rejection. Proxy-chain tests cover spoofed headers, trusted/untrusted peers, multiple hops and IPv6. Detail API confirms the trusted client IP is used for GeoIP. Native build, go test and go vet pass; actual database download and live Chromium check also passed. Docker CLI remains unavailable, so container execution is unverified.

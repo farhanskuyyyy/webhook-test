@@ -34,7 +34,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.8 ui-monospace,Conso
 </div>
 </section>
 </main>
-<footer>Data tersimpan di server ini. Simpan URL inspector untuk membuka endpoint yang sama lagi. IP peer adalah koneksi langsung ke server; header proxy ditampilkan apa adanya.</footer>
+<footer>Data tersimpan di server ini. Simpan URL inspector untuk membuka endpoint yang sama lagi. IP peer adalah koneksi langsung ke server; IP pengirim mengikuti konfigurasi trusted proxy. Lokasi IP adalah perkiraan, bisa mengarah ke VPN/proxy atau pusat jaringan ISP. <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">IP Geolocation by DB-IP</a>.</footer>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -85,6 +85,7 @@ function renderDetail() {
   $('request-method').textContent = selected.method; $('request-url').textContent = url;
   tableRows('metadata', [
     ['Request ID', '#' + selected.id], ['Host', meta.host || 'Belum direkam'],
+    ['IP pengirim', meta.client_ip || selected.remote], ['Lokasi (perkiraan)', locationText(selected.location)],
     ['IP peer', selected.remote], ['Alamat peer', meta.remote_addr || 'Belum direkam'],
     ['HTTP version', meta.http_version || 'Belum direkam'],
     ['Diterima (lokal)', new Date(selected.created_at).toLocaleString('id-ID', {timeZoneName:'short'})],
@@ -121,6 +122,11 @@ function renderBody() {
   $('body-description').textContent = description + ' | ' + selected.size + ' bytes';
   $('body-content').textContent = selected.size ? content : 'No content. Request ini tidak mengirim body.';
   $('copy-body').disabled = !selected.size;
+}
+function locationText(location) {
+  if (!location) return 'Belum tersedia';
+  if (location.status !== 'ok') return location.message || 'Lokasi belum tersedia.';
+  return [location.city, location.region, location.country].filter(Boolean).join(', ') + (location.country_code ? ' (' + location.country_code + ')' : '');
 }
 async function refresh() {
   if (busy || !code) return; busy = true;

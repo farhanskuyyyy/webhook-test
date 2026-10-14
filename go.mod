@@ -4,6 +4,8 @@ go 1.22.1
 
 require (
 	github.com/gofiber/fiber/v2 v2.52.9
+	github.com/maxmind/mmdbwriter v1.0.0
+	github.com/oschwald/maxminddb-golang v1.13.1
 	modernc.org/sqlite v1.29.10
 )
 
@@ -22,6 +24,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
+	go4.org/netipx v0.0.0-20220812043211-3cc044ffd68d // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	modernc.org/gc/v3 v3.0.0-20240107210532-573471604cb6 // indirect
 	modernc.org/libc v1.49.3 // indirect

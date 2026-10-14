@@ -20,7 +20,7 @@ curl -X POST http://localhost:8080/<code> \
 
 Inspector otomatis memeriksa request baru setiap 2 detik, menampilkan 100 terbaru dan tombol untuk memuat halaman sebelumnya. Preview menampilkan URL lengkap, request ID, host, IP/alamat peer, versi HTTP, waktu lokal dan UTC, ukuran body, Content-Type, serta User-Agent. Header dan query berulang ditampilkan dalam tabel, termasuk query mentah. Body bisa dilihat sebagai formatted JSON, raw text, atau hex untuk payload biner; tersedia salin body, salin detail JSON, dan download byte asli.
 
-Database versi awal otomatis dimigrasikan tanpa menghapus request. Metadata tambahan hanya tersedia untuk callback baru; request lama menampilkan informasi yang memang sudah direkam. Versi HTTP adalah koneksi yang diterima aplikasi (bisa HTTP/1.1 dari reverse proxy walau pengirim memakai HTTP/2). Scheme mengikuti informasi request/proxy yang diterima, dan bukan verifikasi koneksi TLS pengirim. GeoIP dan durasi proses tidak ditampilkan karena belum direkam.
+Database versi awal otomatis dimigrasikan tanpa menghapus request. Metadata tambahan hanya tersedia untuk callback baru; request lama menampilkan informasi yang memang sudah direkam. Versi HTTP adalah koneksi yang diterima aplikasi (bisa HTTP/1.1 dari reverse proxy walau pengirim memakai HTTP/2). Scheme mengikuti informasi request/proxy yang diterima, dan bukan verifikasi koneksi TLS pengirim. Durasi proses tidak ditampilkan karena belum direkam.
 
 ## Deploy Docker
 
@@ -38,10 +38,33 @@ Akses port 8080 atau arahkan reverse proxy HTTPS/domain ke port tersebut. SQLite
 | `LISTEN_ADDR` | `:<PORT>` | Override alamat bind |
 | `DB_PATH` | `data/webhooks.db` | Lokasi SQLite |
 | `MAX_BODY_BYTES` | `10485760` | Maksimum payload per request (10 MiB), bisa dinaikkan |
+| `TRUSTED_PROXIES` | kosong | Daftar IP/CIDR reverse proxy dipisahkan koma, untuk membaca IP pengirim dari X-Forwarded-For |
+| `GEOIP_DB_PATH` | `dbip-city-lite.mmdb` di direktori SQLite | Lokasi database kota GeoIP lokal |
+| `GEOIP_AUTO_DOWNLOAD` | `true` | Unduh DB-IP City Lite jika database belum tersedia; `false` untuk mengelola MMDB sendiri |
 
 Tidak ada kuota endpoint, jumlah request, atau expiry. Kapasitas tetap mengikuti disk, memori, dan throughput SQLite. Limit payload mencegah satu request menghabiskan memori; limit reverse proxy juga perlu disesuaikan jika menerima payload besar.
 
-Kode endpoint berfungsi sebagai akses: siapa pun yang memiliki kode dapat mengirim, melihat, dan menghapus request. Tidak ada akun/login. Jangan gunakan untuk data rahasia pada server publik tanpa pembatasan akses inspector di reverse proxy. IP yang dicatat adalah peer langsung (IP proxy jika memakai proxy); header forwarded tetap dapat dilihat sebagai data request.
+Kode endpoint berfungsi sebagai akses: siapa pun yang memiliki kode dapat mengirim, melihat, dan menghapus request. Tidak ada akun/login. Jangan gunakan untuk data rahasia pada server publik tanpa pembatasan akses inspector di reverse proxy. IP peer tetap dicatat terpisah dari IP pengirim; header forwarded tetap dapat dilihat sebagai data request.
+
+## Lokasi IP pengirim
+
+Preview menampilkan negara, region/provinsi, dan kota perkiraan dengan database lokal [DB-IP City Lite](https://db-ip.com/db/download/ip-to-city-lite). Tidak ada API lookup per request, kuota lookup, atau pengiriman IP callback ke pihak luar. Pertama kali server berjalan, aplikasi mengunduh database MMDB bulanan lewat HTTPS di background (sekitar 121 MB setelah ekstraksi untuk rilis Oktober 2026). Callback tetap diterima selama download atau jika download gagal; preview memberi status yang sesuai. Jika gagal, periksa koneksi internet/log server lalu restart aplikasi untuk mencoba lagi. IP lokal/private tidak diberi lokasi palsu.
+
+Database disimpan di volume data dan digunakan kembali setelah restart. Untuk memperbarui data bulanan, hentikan aplikasi, hapus/ganti **hanya file MMDB**, lalu jalankan kembali. Jangan hapus database SQLite/volume. Bisa juga menyediakan MMDB DB-IP City Lite sendiri di `GEOIP_DB_PATH` dan mematikan auto-download. Lisensi data [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); atribusi DB-IP ditampilkan pada inspector.
+
+GeoIP menunjukkan lokasi jaringan, bukan lokasi pasti orang/perangkat. VPN/proxy bisa menunjukkan lokasi exit node. Database City Lite tidak menyediakan ISP; tidak ada geolokasi untuk IP yang tidak ditemukan. Callback lama memakai IP peer yang dulu direkam, karena IP asli tidak bisa direkonstruksi secara tepercaya dari header lama.
+
+### Reverse proxy
+
+Jika aplikasi berada di belakang Nginx/Caddy/Traefik/Cloudflare, atur `TRUSTED_PROXIES` ke **IP/CIDR proxy yang benar-benar terhubung ke aplikasi**. Default kosong sengaja mengabaikan X-Forwarded-For untuk mencegah pengirim memalsukan IP.
+
+Contoh (ganti dengan IP proxy di jaringan deploy lo):
+
+```sh
+TRUSTED_PROXIES=172.20.0.2 docker compose up -d --build
+```
+
+Atau tulis `TRUSTED_PROXIES=172.20.0.2` dalam file `.env` di server. Jika ada beberapa hop, daftarkan seluruh proxy tepercaya dipisahkan koma. Proxy harus menimpa/menambahkan header X-Forwarded-For dengan IP koneksi yang sebenarnya; aplikasi membaca rantai dari kanan dan berhenti di hop pertama yang tidak dipercaya. Jangan memakai `0.0.0.0/0` atau `::/0`. Jika Cloudflare berada di depan proxy lain, konfigurasi trust IP Cloudflare di proxy depan dan sanitasi header sebelum diteruskan; jangan menganggap semua header dari internet terpercaya.
 
 Backup SQLite memakai SQLite backup API/CLI `.backup`, atau hentikan aplikasi sebelum menyalin file database. Jangan menyalin hanya file `.db` ketika aplikasi aktif dalam mode WAL.
 

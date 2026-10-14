@@ -88,6 +88,11 @@ func openDB(path string) (*sql.DB, error) {
 }
 
 func newApp(db *sql.DB) *fiber.App {
+	return newAppWithGeo(db, &geoLocator{})
+}
+
+func newAppWithGeo(db *sql.DB, geo *geoLocator) *fiber.App {
+	proxies := trustedProxies()
 	limit, err := strconv.Atoi(env("MAX_BODY_BYTES", "10485760"))
 	if err != nil || limit < 1 {
 		panic("MAX_BODY_BYTES must be positive")
@@ -181,7 +186,15 @@ func newApp(db *sql.DB) *fiber.App {
 		if err != nil {
 			return err
 		}
-		return c.JSON(fiber.Map{"id": id, "method": method, "path": path, "query": query, "headers": json.RawMessage(headers), "metadata": json.RawMessage(metadata), "body": string(body), "body_base64": base64.StdEncoding.EncodeToString(body), "size": len(body), "remote": remote, "created_at": at})
+		var meta map[string]string
+		if err := json.Unmarshal([]byte(metadata), &meta); err != nil {
+			return err
+		}
+		ip := meta["client_ip"]
+		if ip == "" {
+			ip = remote
+		}
+		return c.JSON(fiber.Map{"id": id, "method": method, "path": path, "query": query, "headers": json.RawMessage(headers), "metadata": json.RawMessage(metadata), "location": geo.lookup(ip), "body": string(body), "body_base64": base64.StdEncoding.EncodeToString(body), "size": len(body), "remote": remote, "created_at": at})
 	})
 	app.Delete("/api/bins/:code/requests", exists, func(c *fiber.Ctx) error {
 		if _, err := db.Exec("DELETE FROM requests WHERE code=?", c.Params("code")); err != nil {
@@ -200,7 +213,7 @@ func newApp(db *sql.DB) *fiber.App {
 		if body == nil {
 			body = []byte{}
 		}
-		metadata, err := json.Marshal(fiber.Map{"host": string(c.Request().Host()), "scheme": c.Protocol(), "request_uri": string(c.Request().RequestURI()), "http_version": string(c.Request().Header.Protocol()), "remote_addr": c.Context().RemoteAddr().String()})
+		metadata, err := json.Marshal(fiber.Map{"host": string(c.Request().Host()), "scheme": c.Protocol(), "request_uri": string(c.Request().RequestURI()), "http_version": string(c.Request().Header.Protocol()), "remote_addr": c.Context().RemoteAddr().String(), "client_ip": clientIP(c, proxies)})
 		if err != nil {
 			return err
 		}
@@ -221,7 +234,8 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	app := newApp(db)
+	geo := startGeo(env("GEOIP_DB_PATH", filepath.Join(filepath.Dir(env("DB_PATH", "data/webhooks.db")), "dbip-city-lite.mmdb")), env("GEOIP_AUTO_DOWNLOAD", "true") == "true")
+	app := newAppWithGeo(db, geo)
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	go func() {

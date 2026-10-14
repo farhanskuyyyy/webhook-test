@@ -6,4 +6,6 @@ ENERGY 1 / RHYTHM 2 / MOTION 1. Identitas berupa aksen hijau pada URL dan baris 
 
 Preview detail diperbarui mengikuti referensi pengguna: ringkasan request dan headers berdampingan di desktop, kemudian query dan body dalam bagian terpisah. Tabel membedakan nama field dan nilai tanpa memaksa pengguna berganti tab. Di layar sempit ringkasan dan header ditumpuk. Pilihan formatted/raw/hex melayani JSON, teks, dan byte biner. Metadata yang tidak ada pada request lama diberi label jujur.
 
+Lokasi GeoIP ditempatkan langsung di ringkasan setelah IP pengirim, dengan label perkiraan. IP peer dipisahkan agar proxy tidak tersembunyi. Status private/tidak tersedia/download dijelaskan sebagai teks. Tautan atribusi data DB-IP berada di footer; tidak menambahkan peta atau gambar eksternal.
+
 UI UX Pro Max: pencarian design-system dijalankan untuk developer webhook inspector dashboard, diulang untuk operations dashboard. Rekomendasi layout landing tidak cocok untuk inspector; fallback ke panduan aksesibilitas/interaction bawaan dan komposisi master/detail. Arahan minimal functional, developer monospace, dan aksen endpoint hijau sesuai hasil pertama. Tidak menggunakan rekomendasi hero/marketing.
