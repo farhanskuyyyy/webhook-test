@@ -1,0 +1,6 @@
+/data/
+*.exe
+/hookdesk
+*.db
+*.db-shm
+*.db-wal
