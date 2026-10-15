@@ -12,6 +12,7 @@ Hookdesk is a self-hosted webhook inspector. It is a small Go service with Fiber
 - `admin.go`, `web/admin.html`: admin session, login protection, endpoint monitoring API and CMS page.
 - `web/admin.src.css`, `web/admin.css`, `package.json`: Tailwind source, checked-in compiled stylesheet and the local CSS build command (`npm ci && npm run build:css`).
 - `compose.yaml`, `Dockerfile`: persistent `/data` volume and deploy configuration.
+- `Makefile`, `.env.example`: local Docker and development shortcuts plus safe configuration template.
 - `DESIGN.md`: interface direction and rationale.
 
 ## Development

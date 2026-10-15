@@ -4,6 +4,29 @@ Webhook inspector self-hosted: Go + Fiber v2 + SQLite (pure Go, tanpa CGO). Hala
 
 ## Jalankan
 
+### Docker (disarankan)
+
+Pastikan Docker Desktop sudah terbuka dan Docker Compose aktif. Buat file konfigurasi admin dari contoh, lalu ganti password contoh dengan password rahasia minimal 16 karakter:
+
+```sh
+cp .env.example .env
+```
+
+Edit `.env`, kemudian build dan jalankan:
+
+```sh
+docker compose up -d --build
+docker compose ps
+```
+
+Buka inspector di http://localhost:8080 dan CMS admin di http://localhost:8080/admin. Log bisa dilihat dengan `docker compose logs -f --tail=100 hookdesk`. Hentikan aplikasi dengan `docker compose down`; database tetap tersimpan di volume Docker `webhook-data`.
+
+Kalau GNU Make tersedia, jalankan `make help` untuk daftar shortcut: `make up`, `make logs`, `make status`, dan `make down`. `make down` mempertahankan volume data.
+
+### Go lokal
+
+Perintah Go di bawah menjalankan aplikasi langsung tanpa Docker:
+
 ```sh
 go run .
 ```
