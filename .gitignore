@@ -7,3 +7,4 @@
 *.mmdb
 *.mmdb.gz
 .env
+/node_modules/

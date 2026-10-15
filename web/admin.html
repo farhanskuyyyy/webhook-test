@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Hookdesk Admin</title>
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+  <div id="login-view" class="hidden min-h-screen items-center justify-center px-4 py-10">
+    <main class="w-full max-w-md">
+      <a class="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-950" href="/" aria-label="Kembali ke Hookdesk"><span class="brand-mark">H</span> Hookdesk</a>
+      <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Admin console</p>
+        <h1 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Masuk ke CMS</h1>
+        <p class="mt-2 text-sm leading-6 text-slate-600">Login khusus admin untuk memonitor dan mengelola endpoint webhook.</p>
+        <div id="setup-message" class="notice notice-error mt-5 hidden" role="alert">Admin belum dikonfigurasi. Atur <code>ADMIN_USERNAME</code> dan <code>ADMIN_PASSWORD</code> minimal 16 karakter di environment server.</div>
+        <form id="login-form" class="mt-6 space-y-4">
+          <label class="field-label" for="username">Username</label>
+          <input id="username" name="username" class="field -mt-2" autocomplete="username" required maxlength="128">
+          <label class="field-label" for="password">Password</label>
+          <input id="password" name="password" class="field -mt-2" type="password" autocomplete="current-password" required>
+          <p id="login-error" class="text-sm text-red-700" role="alert"></p>
+          <button id="login-button" class="button-primary w-full" type="submit">Masuk sebagai admin</button>
+        </form>
+      </section>
+      <p class="mt-5 text-center text-xs text-slate-500">Halaman ini hanya dapat diakses dengan kredensial admin.</p>
+    </main>
+  </div>
+
+  <div id="cms-view" class="hidden min-h-screen lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">
+    <aside class="border-b border-slate-200 bg-white lg:min-h-screen lg:border-b-0 lg:border-r">
+      <div class="flex h-16 items-center gap-3 border-b border-slate-100 px-5"><span class="brand-mark">H</span><span class="font-semibold tracking-tight text-slate-950">hookdesk<span class="text-emerald-700">.</span></span></div>
+      <nav class="flex gap-2 p-3 lg:flex-col" aria-label="Admin navigation"><a class="nav-link nav-link-active" href="#overview" aria-current="page"><span aria-hidden="true">▦</span> Ringkasan endpoint</a><a class="nav-link" href="/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">↗</span> Webhook inspector</a></nav>
+      <div class="hidden px-5 pt-8 lg:block"><p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Workspace</p><p class="mt-3 text-xs leading-5 text-slate-500">Kelola endpoint dan aktivitas callback di server ini.</p></div>
+    </aside>
+    <div class="min-w-0">
+      <header class="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-7"><div><p class="text-xs text-slate-500">Workspace / Monitoring</p></div><div class="flex items-center gap-3"><span class="hidden text-sm text-slate-600 sm:inline">Admin</span><button id="logout-button" class="button-secondary">Keluar</button></div></header>
+      <main id="overview" class="mx-auto max-w-[1440px] px-4 py-7 sm:px-7 sm:py-9">
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Monitoring</p><h1 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-[28px]">Endpoint webhook</h1><p class="mt-2 text-sm text-slate-600">Pantau endpoint, callback terakhir, dan bersihkan URL yang sudah tidak dipakai.</p></div><button id="refresh-button" class="button-secondary self-start sm:self-auto">Muat ulang</button></div>
+        <div class="mt-7 grid gap-4 sm:grid-cols-2">
+          <section class="metric"><div class="flex items-center justify-between"><p class="text-sm font-medium text-slate-600">Total endpoint</p><span class="metric-symbol">/</span></div><p id="endpoint-total" class="mt-4 text-3xl font-semibold tracking-tight text-slate-950">-</p><p class="mt-1 text-xs text-slate-500">Seluruh URL webhook yang tersimpan</p></section>
+          <section class="metric"><div class="flex items-center justify-between"><p class="text-sm font-medium text-slate-600">Total callback</p><span class="metric-symbol">↘</span></div><p id="request-total" class="mt-4 text-3xl font-semibold tracking-tight text-slate-950">-</p><p class="mt-1 text-xs text-slate-500">Request yang tersimpan di SQLite</p></section>
+        </div>
+        <section class="mt-7 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div class="flex flex-col gap-4 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"><div><h2 class="font-semibold text-slate-950">Semua endpoint</h2><p id="result-count" class="mt-1 text-xs text-slate-500">Memuat data...</p></div><form id="search-form" class="flex w-full gap-2 sm:max-w-sm"><label class="sr-only" for="search">Cari kode endpoint</label><input id="search" class="field min-w-0" type="search" maxlength="128" placeholder="Cari kode endpoint"><button class="button-secondary shrink-0" type="submit">Cari</button></form></div>
+          <div id="load-error" class="notice notice-error mx-4 mt-4 hidden sm:mx-5" role="alert"></div>
+          <div id="empty-state" class="hidden px-5 py-14 text-center"><p class="font-medium text-slate-800">Belum ada endpoint yang cocok</p><p class="mt-2 text-sm text-slate-500">Coba kata pencarian lain atau buat endpoint dari halaman inspector.</p><a class="mt-4 inline-flex text-sm font-medium text-emerald-700 hover:text-emerald-800" href="/" target="_blank" rel="noopener noreferrer">Buka inspector</a></div>
+          <div id="table-scroll" class="overflow-x-auto"><table class="min-w-[850px] w-full text-left text-sm"><thead class="table-head"><tr><th scope="col">Endpoint</th><th scope="col">Dibuat</th><th scope="col" class="text-right">Callback</th><th scope="col">Aktivitas terakhir</th><th scope="col">Request terakhir</th><th scope="col" class="text-right">Aksi</th></tr></thead><tbody id="endpoint-rows" class="divide-y divide-slate-100"></tbody></table></div>
+          <div class="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 sm:px-5"><p id="page-label" class="text-xs text-slate-500">Halaman 1</p><div class="flex gap-2"><button id="previous-page" class="button-secondary" disabled>Sebelumnya</button><button id="next-page" class="button-secondary" disabled>Berikutnya</button></div></div>
+        </section>
+        <p class="mt-4 text-xs leading-5 text-slate-500">Menghapus endpoint akan menghapus URL dan seluruh callback yang tersimpan. Tindakan ini tidak dapat dibatalkan.</p>
+      </main>
+    </div>
+  </div>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <script>
+  'use strict';
+  const $=id=>document.getElementById(id);let page=1,query='',loading=false;
+  async function api(path,options={}){const response=await fetch(path,{...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});if(response.status===401&&path!=='/api/admin/login'){showLogin();throw new Error('Sesi admin sudah berakhir. Silakan login lagi.')}const data=response.status===204?null:await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Request gagal ('+response.status+').');return data}
+  function toast(message){const node=$('toast');node.textContent=message;node.classList.remove('hidden');clearTimeout(toast.timer);toast.timer=setTimeout(()=>node.classList.add('hidden'),3200)}
+  function showLogin(){ $('cms-view').classList.add('hidden');$('login-view').classList.remove('hidden');$('login-view').classList.add('flex'); }
+  function showCMS(){ $('login-view').classList.add('hidden');$('login-view').classList.remove('flex');$('cms-view').classList.remove('hidden');load().catch(err=>{$('load-error').textContent=err.message;$('load-error').classList.remove('hidden')}); }
+  function formatDate(value){if(!value)return 'Belum ada callback';const date=new Date(value);return Number.isNaN(date.getTime())?value:date.toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'})}
+  function el(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node}
+  function renderRows(data){const body=$('endpoint-rows');body.replaceChildren();$('result-count').textContent=data.total.toLocaleString('id-ID')+' endpoint';$('page-label').textContent='Halaman '+data.page+' dari '+Math.max(1,data.pages);$('page-label').dataset.pages=data.pages;$('previous-page').disabled=data.page<=1||loading;$('next-page').disabled=data.page>=data.pages||loading;
+    $('empty-state').classList.toggle('hidden',data.items.length!==0);$('table-scroll').classList.toggle('hidden',data.items.length===0);
+    for(const item of data.items){const row=el('tr','table-row'),endpoint=el('td','px-4 py-4 sm:px-5'),link=el('a','font-mono text-xs font-medium text-emerald-800 hover:underline','/'+item.code);link.href='/#!/view/'+item.code;link.target='_blank';link.rel='noopener noreferrer';endpoint.append(link);const code=el('p','mt-1 text-[11px] text-slate-400',item.code);endpoint.append(code);
+      row.append(endpoint,el('td','whitespace-nowrap px-4 py-4 text-xs text-slate-600 sm:px-5',formatDate(item.created_at)),el('td','px-4 py-4 text-right tabular-nums font-medium text-slate-800',item.request_count.toLocaleString('id-ID')),el('td','whitespace-nowrap px-4 py-4 text-xs text-slate-600 sm:px-5',formatDate(item.last_seen)),el('td','max-w-64 truncate px-4 py-4 font-mono text-xs text-slate-600 sm:px-5',item.last_request||'Belum ada request'));
+      const actions=el('td','whitespace-nowrap px-4 py-4 text-right sm:px-5'),remove=el('button','button-danger','Hapus');remove.type='button';remove.setAttribute('aria-label','Hapus endpoint '+item.code);remove.onclick=()=>removeEndpoint(item);actions.append(remove);row.append(actions);body.append(row)}
+  }
+  async function load(){if(loading)return;loading=true;$('load-error').classList.add('hidden');$('refresh-button').disabled=true;try{const [summary,data]=await Promise.all([api('/api/admin/summary'),api('/api/admin/bins?page='+page+'&q='+encodeURIComponent(query))]);$('endpoint-total').textContent=summary.endpoints.toLocaleString('id-ID');$('request-total').textContent=summary.requests.toLocaleString('id-ID');renderRows(data)}catch(err){$('load-error').textContent=err.message;$('load-error').classList.remove('hidden')}finally{loading=false;$('refresh-button').disabled=false;$('previous-page').disabled=page<=1;$('next-page').disabled=loading||page>=Number($('page-label').dataset.pages||1)}}
+  async function removeEndpoint(item){const confirmed=confirm('Hapus endpoint /'+item.code+' beserta '+item.request_count+' callback yang tersimpan? Tindakan ini tidak dapat dibatalkan.');if(!confirmed)return;try{const result=await api('/api/admin/bins/'+encodeURIComponent(item.code),{method:'DELETE'});toast('Endpoint dihapus. '+result.requests_deleted+' callback ikut dihapus.');await load()}catch(err){$('load-error').textContent=err.message;$('load-error').classList.remove('hidden')}}
+  $('login-form').onsubmit=async event=>{event.preventDefault();const button=$('login-button');button.disabled=true;$('login-error').textContent='';try{await api('/api/admin/login',{method:'POST',body:JSON.stringify({username:$('username').value,password:$('password').value})});$('password').value='';showCMS()}catch(err){$('login-error').textContent=err.message;if(err.message.includes('belum dikonfigurasi')||err.message.includes('minimal 16 karakter'))$('setup-message').classList.remove('hidden')}finally{button.disabled=false}};
+  $('logout-button').onclick=async()=>{try{await api('/api/admin/logout',{method:'POST'});showLogin();toast('Berhasil keluar.')}catch(err){toast(err.message)}};
+  $('search-form').onsubmit=event=>{event.preventDefault();query=$('search').value.trim();page=1;load()};$('refresh-button').onclick=()=>load();$('previous-page').onclick=()=>{if(page>1){page--;load()}};$('next-page').onclick=()=>{page++;load()};
+  async function init(){try{await api('/api/admin/summary');showCMS()}catch(err){showLogin();if(err.message.includes('belum dikonfigurasi')){$('setup-message').classList.remove('hidden');$('login-form').classList.add('hidden')}}}
+  init();
+  </script>
+</body>
+</html>

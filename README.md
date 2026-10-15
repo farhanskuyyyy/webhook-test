@@ -1,6 +1,6 @@
 # Hookdesk
 
-Webhook inspector self-hosted: Go + Fiber v2 + SQLite (pure Go, tanpa CGO). HTML/CSS/JS di-embed ke binary, tanpa npm atau CDN.
+Webhook inspector self-hosted: Go + Fiber v2 + SQLite (pure Go, tanpa CGO). Halaman HTML/CSS/JS di-embed ke binary; aset CMS memakai Tailwind CSS yang di-compile lokal. Tidak ada CDN saat aplikasi berjalan.
 
 ## Jalankan
 
@@ -9,6 +9,10 @@ go run .
 ```
 
 Buka http://localhost:8080. Halaman membuat kode acak 128-bit lewat API lalu mengganti URL menjadi `/#!/view/<code>`. Simpan URL ini untuk membuka inspector yang sama. Membuka `/` lagi membuat endpoint baru.
+
+CMS admin tersedia di http://localhost:8080/admin. Atur `ADMIN_USERNAME` dan `ADMIN_PASSWORD` (minimal 16 karakter) di environment atau file `.env` sebelum login. Contoh: `ADMIN_USERNAME=admin` dan password acak minimal 16 karakter. Di deployment HTTPS, set `ADMIN_COOKIE_SECURE=true` agar cookie admin hanya dikirim lewat HTTPS. Endpoint inspector tetap dapat dipakai tanpa login; CMS dan API pengelolaan hanya menerima sesi admin.
+
+Tailwind hanya diperlukan ketika mengubah styling CMS: jalankan `npm ci` lalu `npm run build:css`. File hasil compile `web/admin.css` ikut di-embed saat Go dibuild. Dockerfile melakukan langkah Tailwind ini otomatis di build stage.
 
 ```sh
 curl -X POST http://localhost:8080/<code> \
@@ -41,10 +45,13 @@ Akses port 8080 atau arahkan reverse proxy HTTPS/domain ke port tersebut. SQLite
 | `TRUSTED_PROXIES` | kosong | Daftar IP/CIDR reverse proxy dipisahkan koma, untuk membaca IP pengirim dari X-Forwarded-For |
 | `GEOIP_DB_PATH` | `dbip-city-lite.mmdb` di direktori SQLite | Lokasi database kota GeoIP lokal |
 | `GEOIP_AUTO_DOWNLOAD` | `true` | Unduh DB-IP City Lite jika database belum tersedia; `false` untuk mengelola MMDB sendiri |
+| `ADMIN_USERNAME` | kosong | Username CMS admin; wajib diisi untuk login |
+| `ADMIN_PASSWORD` | kosong | Password CMS admin minimal 16 karakter; wajib diisi untuk login |
+| `ADMIN_COOKIE_SECURE` | `false` | Set `true` di deployment HTTPS |
 
 Tidak ada kuota endpoint, jumlah request, atau expiry. Kapasitas tetap mengikuti disk, memori, dan throughput SQLite. Limit payload mencegah satu request menghabiskan memori; limit reverse proxy juga perlu disesuaikan jika menerima payload besar.
 
-Kode endpoint berfungsi sebagai akses: siapa pun yang memiliki kode dapat mengirim, melihat, dan menghapus request. Tidak ada akun/login. Jangan gunakan untuk data rahasia pada server publik tanpa pembatasan akses inspector di reverse proxy. IP peer tetap dicatat terpisah dari IP pengirim; header forwarded tetap dapat dilihat sebagai data request.
+Kode endpoint berfungsi sebagai akses inspector: siapa pun yang memiliki kode dapat mengirim, melihat, dan menghapus callback endpoint itu. CMS admin terpisah memakai akun yang diatur lewat environment. Lindungi halaman inspector dengan reverse proxy jika data request bersifat privat. IP peer tetap dicatat terpisah dari IP pengirim; header forwarded tetap dapat dilihat sebagai data request.
 
 ## Lokasi IP pengirim
 
@@ -77,6 +84,20 @@ Backup SQLite memakai SQLite backup API/CLI `.backup`, atau hentikan aplikasi se
 | GET | `/api/bins/:code/requests/:id` | Detail dengan body teks dan `body_base64` untuk byte asli |
 | DELETE | `/api/bins/:code/requests` | Hapus seluruh request endpoint |
 | GET | `/healthz` | Health check database |
+
+CMS ada di `/admin`, dengan login sebelum data admin dapat dibaca. Tabel memberi jumlah callback, waktu dan request terakhir, pencarian kode, pagination, link inspector, serta penghapusan endpoint dengan seluruh callback di dalam satu transaksi.
+
+API CMS memerlukan cookie sesi admin dari login:
+
+| Method | Path | Hasil |
+| --- | --- | --- |
+| POST | `/api/admin/login` | Login JSON `{"username":"...","password":"..."}` |
+| POST | `/api/admin/logout` | Akhiri sesi admin |
+| GET | `/api/admin/summary` | Total endpoint dan callback |
+| GET | `/api/admin/bins?page=1&q=<kode>` | Daftar endpoint dengan pagination 50 baris |
+| DELETE | `/api/admin/bins/:code` | Hapus endpoint beserta seluruh callback secara permanen |
+
+CMS mengonfirmasi penghapusan dan menampilkan jumlah callback yang ikut terhapus. Login dibatasi 8 percobaan per IP per 15 menit. Cookie sesi HttpOnly, SameSite Strict, dan berlaku 12 jam; rahasia tanda tangan dibuat ulang saat server restart, jadi admin perlu login lagi.
 
 ```sh
 go test ./...

@@ -29,3 +29,13 @@ PASS - Purpose gate: location sits beside sender IP in the existing summary, wit
 PASS - Liveliness: existing ENERGY 1 / RHYTHM 2 / MOTION 1 and metadata table hierarchy retained.
 
 PASS - Craftsmanship: unit tests generate a small MMDB fixture to verify city/region/country parsing, missing/public/private states, gzip download and invalid content rejection. Proxy-chain tests cover spoofed headers, trusted/untrusted peers, multiple hops and IPv6. Detail API confirms the trusted client IP is used for GeoIP. Native build, go test and go vet pass; actual database download and live Chromium check also passed. Docker CLI remains unavailable, so container execution is unverified.
+
+## Admin CMS
+
+PASS - Directus-inspired navigation and table density, with restrained Payload-style neutral surfaces. Tailwind CSS is built locally and embedded; the admin page has no CDN dependency. Active tasks are endpoint search, callback counts/last request and confirmed deletion. No fabricated dashboard metrics.
+
+PASS - Login and dashboard views verified separately at desktop and mobile sizes. Browser flow checked a failed password, successful login, unauthorized API access, summary counts, 50-row pagination, code search, successful deletion with request cascade, cancel deletion, logout and hidden dashboard after logout. No JavaScript errors or whole-page horizontal overflow at 375/768/1024/1440px; screenshot reviewed.
+
+PASS - Session cookie is HttpOnly, SameSite Strict, signed and expires after 12 hours. Login attempts are limited; configuration has no default password and password length is checked. Admin mutations require a same-origin request. Endpoint and callback deletion uses one SQLite transaction.
+
+PASS - Go native build and local Tailwind CSS build pass. Browser checks cover the functional flow. Automated Go tests were not run in this task; Docker was not available for image execution. Skills `@antislop` and `@ui-ux-promax` were not available in the session; `generate-cms.md` was followed directly.

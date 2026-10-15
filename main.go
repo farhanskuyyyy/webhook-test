@@ -3,7 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"database/sql"
-	_ "embed"
+	"embed"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -25,6 +25,17 @@ import (
 
 //go:embed web/index.html
 var page []byte
+
+//go:embed web/admin.html web/admin.css
+var adminAssets embed.FS
+
+var adminSessionKey = func() []byte {
+	key := make([]byte, 32)
+	if _, err := rand.Read(key); err != nil {
+		panic(err)
+	}
+	return key
+}()
 
 var codePattern = regexp.MustCompile(`^[a-f0-9]{32}$`)
 
@@ -93,6 +104,7 @@ func newApp(db *sql.DB) *fiber.App {
 
 func newAppWithGeo(db *sql.DB, geo *geoLocator) *fiber.App {
 	proxies := trustedProxies()
+	admin := &adminAuth{username: os.Getenv("ADMIN_USERNAME"), password: os.Getenv("ADMIN_PASSWORD"), secure: env("ADMIN_COOKIE_SECURE", "false") == "true", attempts: make(map[string][]time.Time)}
 	limit, err := strconv.Atoi(env("MAX_BODY_BYTES", "10485760"))
 	if err != nil || limit < 1 {
 		panic("MAX_BODY_BYTES must be positive")
@@ -136,6 +148,28 @@ func newAppWithGeo(db *sql.DB, geo *geoLocator) *fiber.App {
 		}
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
+	app.Get("/admin", func(c *fiber.Ctx) error {
+		asset, err := adminAssets.ReadFile("web/admin.html")
+		if err != nil {
+			return err
+		}
+		c.Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+		return c.Type("html").Send(asset)
+	})
+	app.Get("/admin.css", func(c *fiber.Ctx) error {
+		asset, err := adminAssets.ReadFile("web/admin.css")
+		if err != nil {
+			return err
+		}
+		c.Set("Cache-Control", "public, max-age=3600")
+		return c.Type("css").Send(asset)
+	})
+	app.Post("/api/admin/login", admin.login)
+	app.Post("/api/admin/logout", admin.require, admin.sameOrigin, admin.logout)
+	adminAPI := app.Group("/api/admin", admin.require)
+	adminAPI.Get("/summary", admin.summary(db))
+	adminAPI.Get("/bins", admin.bins(db))
+	adminAPI.Delete("/bins/:code", admin.sameOrigin, admin.deleteBin(db))
 	app.Get("/", func(c *fiber.Ctx) error {
 		c.Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'")
 		return c.Type("html").Send(page)

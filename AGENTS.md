@@ -9,6 +9,8 @@ Hookdesk is a self-hosted webhook inspector. It is a small Go service with Fiber
 - `geoip.go`: local MMDB lookup/download and trusted reverse-proxy IP resolution.
 - `main_test.go`, `geoip_test.go`: API lifecycle, SQLite migration, encoding, GeoIP, and proxy-chain tests.
 - `web/index.html`: the embedded inspector UI. It is embedded by `//go:embed`; rebuilding the Go binary or container includes HTML changes.
+- `admin.go`, `web/admin.html`: admin session, login protection, endpoint monitoring API and CMS page.
+- `web/admin.src.css`, `web/admin.css`, `package.json`: Tailwind source, checked-in compiled stylesheet and the local CSS build command (`npm ci && npm run build:css`).
 - `compose.yaml`, `Dockerfile`: persistent `/data` volume and deploy configuration.
 - `DESIGN.md`: interface direction and rationale.
 
@@ -35,6 +37,9 @@ The default server is `http://localhost:8080`; SQLite defaults to `data/webhooks
 - GeoIP uses the local DB-IP City Lite MMDB, downloaded over HTTPS in the background if missing. It must never block callback capture. The database file stays beside SQLite on the persistent volume. DB-IP Lite requires CC BY 4.0 attribution; retain the inspector footer link and README attribution.
 - GeoIP is approximate and returns city/region/country only. Do not label it as an exact person/device location or claim ISP data. Private addresses and missing records must not receive invented locations.
 - Only honor `X-Forwarded-For` from addresses configured in `TRUSTED_PROXIES`. The default is empty by design. Resolve a proxy chain from the nearest hop outward and stop at the first untrusted hop; never default to trusting every address.
+- CMS credentials come from `ADMIN_USERNAME` and `ADMIN_PASSWORD`; password must be at least 16 characters. There is intentionally no default admin credential. If they are unset, keep webhook inspection working and show the CMS setup message.
+- Admin sessions use a signed, HttpOnly, SameSite Strict cookie with a 12-hour expiry. Protect state-changing admin routes with the same-origin check and require confirmation before endpoint deletion. Deleting an endpoint must atomically delete all its requests and the bin.
+- Keep endpoint and request totals scoped to the admin API. Public callback inspector data remains capability-protected by its random 128-bit endpoint code.
 
 ## UI changes
 
@@ -49,5 +54,7 @@ docker compose up -d --build
 ```
 
 Keep SQLite and MMDB in `/data`. For a reverse proxy, document the actual `TRUSTED_PROXIES` requirement rather than guessing a deployment network. Docker Compose restarts the app but does not publish changes automatically; after a code change, commit/push and rebuild the image on the deployment host. Never claim the public site changed unless deployment was actually performed and verified.
+
+For public HTTPS deployments, set `ADMIN_COOKIE_SECURE=true` and configure a strong `ADMIN_USERNAME`/`ADMIN_PASSWORD` in the deployment environment. Never put a production password in committed compose files or source.
 
 When handing work off, report changed files, tests/builds actually run, material limits, and the commit/push status. Do not say commands passed if they were not run.
