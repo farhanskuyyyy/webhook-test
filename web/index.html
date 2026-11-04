@@ -28,6 +28,7 @@
   --muted:#536258;
   --hint:#4b6051;
   --accent:#286642;
+  --stickman:#16a34a;
   --accent-badge-bg:#eaf1e8;
   --accent-badge-text:#286642;
   --line:#d6dcd5;
@@ -60,6 +61,7 @@
   --muted:#8b9d92;
   --hint:#9cb0a4;
   --accent:#3ebd7a;
+  --stickman:#4ade80;
   --accent-badge-bg:#193824;
   --accent-badge-text:#4ade80;
   --line:#223127;
@@ -93,6 +95,7 @@
     --muted:#8b9d92;
     --hint:#9cb0a4;
     --accent:#3ebd7a;
+    --stickman:#4ade80;
     --accent-badge-bg:#193824;
     --accent-badge-text:#4ade80;
     --line:#223127;
@@ -130,13 +133,17 @@ select option{background:var(--surface);color:var(--text)}
 header{min-height:72px;padding:12px 30px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);background:var(--surface)}
 .brand{font-size:21px;font-weight:750;letter-spacing:-1px}
 .brand span{color:var(--accent)}
+#brand-hook{color:var(--text)}
+.brand-caret{display:inline-block;width:2px;height:1.05em;margin-left:2px;background:var(--accent);vertical-align:text-bottom}
+@media(prefers-reduced-motion:no-preference){.brand-caret{animation:caret .9s steps(1,end) infinite}}
+@keyframes caret{50%{opacity:0}}
 .subtitle{font-size:13px;color:var(--muted);margin-left:18px;letter-spacing:0;font-weight:400}
 .header-actions{display:flex;align-items:center;gap:10px}
 header a{color:var(--accent);padding:12px;text-decoration:none}
 .theme-toggle{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;min-height:42px;font-size:13px;font-weight:550;border:1px solid var(--btn-border);border-radius:5px;background:var(--btn-bg);color:var(--btn-text);cursor:pointer}
 .theme-toggle:hover{background:var(--btn-hover)}
 .theme-icon{display:inline-flex;align-items:center;justify-content:center;color:var(--accent)}
-.theme-icon svg{width:16px;height:16px;display:block}
+.theme-icon svg{width:16px;height:16px}
 .icon-moon{display:inline-block}
 .icon-sun{display:none}
 :root[data-theme="dark"] .icon-moon{display:none}
@@ -170,6 +177,24 @@ aside{border-right:1px solid var(--line);min-width:0}
 .intro{padding:70px 26px;text-align:center}
 .intro h1{font-size:23px}
 .intro p{max-width:390px;margin:14px auto;color:var(--muted);line-height:1.8}
+.stickman{width:60px;height:80px;display:block;margin:0 auto 14px;overflow:visible}
+.stickman .limb{fill:var(--stickman)}
+.stickman line{stroke:var(--stickman);stroke-width:3;stroke-linecap:round}
+.stickman circle{fill:var(--stickman)}
+.stickman .ground{stroke:var(--line);stroke-width:2;stroke-dasharray:3 5}
+@media(prefers-reduced-motion:no-preference){
+  .stickman .limb{transform-box:fill-box;transform-origin:50% 0}
+  .stickman .arm-l,.stickman .leg-r{animation:swing-a .7s ease-in-out infinite}
+  .stickman .arm-r,.stickman .leg-l{animation:swing-b .7s ease-in-out infinite}
+  .stickman{animation:bob .35s ease-in-out infinite}
+}
+@keyframes swing-a{0%,100%{transform:rotate(26deg)}50%{transform:rotate(-26deg)}}
+@keyframes swing-b{0%,100%{transform:rotate(-26deg)}50%{transform:rotate(26deg)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+.stickman-sm{width:22px;height:30px;margin:0}
+.brand-group{display:flex;align-items:center;gap:12px}
+.mascot-wrap{position:relative;display:inline-flex;align-items:flex-end;height:30px;flex-shrink:0}
+.mascot-bang{position:absolute;top:-8px;right:-10px;background:var(--error);color:#fff;font-weight:800;font-size:11px;line-height:1;padding:3px 6px;border-radius:9px}
 .inspector-head{padding:20px 22px;border-bottom:1px solid var(--line)}
 .inspector-head h1{font-size:18px;margin:0 0 10px}
 .request-url{display:flex;gap:10px;align-items:flex-start;line-height:1.7;overflow-wrap:anywhere}
@@ -195,6 +220,9 @@ summary{cursor:pointer;padding:12px 0;color:var(--accent);min-height:44px}
 pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.8 ui-monospace,Consolas,monospace;background:var(--pre-bg);border:1px solid var(--pre-border);color:var(--pre-text);padding:18px;max-height:520px;overflow:auto;border-radius:4px;margin:0}
 #curl{margin-top:24px;text-align:left}
 #body-content{min-height:90px}
+.body-wrap{position:relative}
+#inspector{position:relative}
+#inspector-fx{position:absolute;inset:0;pointer-events:none;display:block}
 .raw-query{display:block;color:var(--muted);font:12px/1.8 monospace;overflow-wrap:anywhere;margin-bottom:12px}
 .empty-inline{color:var(--muted);font-size:13px;line-height:1.8;margin:12px 0}
 .muted{color:var(--muted)}
@@ -213,20 +241,21 @@ footer a{color:var(--accent)}
 </style>
 </head>
 <body>
-<header><div class="brand">hook<span>desk</span><span class="subtitle">Webhook inspector</span></div><div class="header-actions"><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Ganti mode gelap/terang" title="Ganti mode gelap/terang"><span class="theme-icon" aria-hidden="true"><svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></span><span id="theme-text" class="theme-text">Mode gelap</span></button><a href="/">+ Endpoint baru</a></div></header>
+<header><div class="brand-group"><div id="mascot-wrap" class="mascot-wrap"><svg class="stickman stickman-sm" viewBox="0 0 48 64" aria-hidden="true"><rect class="limb arm-l" x="22.5" y="22" width="3" height="12" rx="1.5"></rect><rect class="limb arm-r" x="22.5" y="22" width="3" height="12" rx="1.5"></rect><rect class="limb leg-l" x="22.5" y="40" width="3" height="18" rx="1.5"></rect><rect class="limb leg-r" x="22.5" y="40" width="3" height="18" rx="1.5"></rect><line x1="24" y1="17" x2="24" y2="40"></line><circle cx="24" cy="10" r="7"></circle></svg><span id="mascot-bang" class="mascot-bang" hidden>!</span></div><div class="brand"><span id="brand-hook"></span><span id="brand-desk"></span></div></div><div class="header-actions"><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Ganti mode gelap/terang" title="Ganti mode gelap/terang"><span class="theme-icon" aria-hidden="true"><svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg><svg class="icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></span><span id="theme-text" class="theme-text">Mode gelap</span></button><a href="/">+ Endpoint baru</a></div></header>
 <section class="endpoint"><label for="url">URL webhook lo</label><div class="urlbar"><input id="url" readonly aria-label="URL webhook"><button id="copy">Salin URL</button></div><p class="hint">Kirim callback ke URL ini. Semua method, header, query, dan body akan dicatat.</p></section>
 <div class="toolbar"><span id="status" class="status" role="status">Menyiapkan endpoint...</span><div class="actions"><button id="test" disabled>Kirim contoh</button><button id="clear" disabled>Hapus request</button></div></div>
 <p id="error" class="message" role="alert"></p>
 <main class="workspace">
 <aside><div class="listheading"><strong>Request masuk</strong><span id="count">0</span></div><div id="list" class="list"></div><button id="more" hidden>Muat sebelumnya</button></aside>
 <section class="detail" aria-label="Preview request">
-<div id="intro" class="intro"><h1>Menunggu callback pertama</h1><p>Kirim request dari aplikasi lo, atau klik <strong>Kirim contoh</strong> untuk coba endpoint ini.</p><pre id="curl"></pre></div>
+<div id="intro" class="intro"><svg class="stickman" viewBox="0 0 48 64" aria-hidden="true"><rect class="limb arm-l" x="22.5" y="22" width="3" height="12" rx="1.5"></rect><rect class="limb arm-r" x="22.5" y="22" width="3" height="12" rx="1.5"></rect><rect class="limb leg-l" x="22.5" y="40" width="3" height="18" rx="1.5"></rect><rect class="limb leg-r" x="22.5" y="40" width="3" height="18" rx="1.5"></rect><line x1="24" y1="17" x2="24" y2="40"></line><circle cx="24" cy="10" r="7"></circle><line class="ground" x1="14" y1="59" x2="34" y2="59"></line></svg><h1>Menunggu callback pertama</h1><p>Kirim request dari aplikasi lo, atau klik <strong>Kirim contoh</strong> untuk coba endpoint ini.</p><pre id="curl"></pre></div>
 <div id="inspector" hidden>
 <div class="inspector-head"><h1>Request Details &amp; Headers</h1><div class="request-url"><span id="request-method" class="method"></span><code id="request-url"></code></div></div>
 <div class="detail-grid"><div><h2>Informasi request</h2><table class="table metadata" aria-label="Informasi request"><tbody id="metadata"></tbody></table><p id="legacy-note" class="hint" hidden>Request lama: host, versi HTTP, dan alamat peer belum direkam.</p></div><div class="headers-box"><h2 id="headers-title">Headers</h2><table class="table" aria-label="Header request"><tbody id="headers"></tbody></table><details id="extra-headers"><summary id="headers-toggle">Tampilkan header lainnya</summary><table class="table" aria-label="Header tambahan"><tbody id="headers-extra"></tbody></table></details></div></div>
 <section class="section"><div class="section-head"><h2>Query Parameters</h2></div><code id="raw-query" class="raw-query"></code><table id="query-table" class="table" aria-label="Query parameters"><tbody id="query"></tbody></table><p id="query-empty" class="empty-inline">Tidak ada query parameter.</p></section>
-<section class="section"><div class="section-head"><h2>Request Content</h2><div class="payload-controls"><label for="body-mode">Tampilan</label><select id="body-mode"><option value="pretty">Formatted</option><option value="raw">Raw text</option><option value="hex">Hex / binary</option></select><button id="copy-body">Salin body</button><button id="download">Download body</button></div></div><p id="body-description" class="hint"></p><pre id="body-content"></pre></section>
+<section class="section"><div class="section-head"><h2>Request Content</h2><div class="payload-controls"><label for="body-mode">Tampilan</label><select id="body-mode"><option value="pretty">Formatted</option><option value="raw">Raw text</option><option value="hex">Hex / binary</option></select><button id="copy-body">Salin body</button><button id="download">Download body</button></div></div><p id="body-description" class="hint"></p><div class="body-wrap"><pre id="body-content"></pre></div></section>
 <section class="section"><div class="section-head"><h2>Request JSON</h2><button id="copy-json">Salin detail JSON</button></div><details id="json-details"><summary>Lihat seluruh data request</summary><pre id="request-json"></pre></details></section>
+<canvas id="inspector-fx" hidden></canvas>
 </div>
 </section>
 </main>
@@ -235,6 +264,23 @@ footer a{color:var(--accent)}
 'use strict';
 const $ = id => document.getElementById(id);
 let code, items = [], selected = null, busy = false, hasMore = false, selectionVersion = 0, listSignature = '';
+let knownMax = 0, firstRender = true, lastBodyMode = null;
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function animate(el, keyframes, options) {
+  if (reduceMotion || !el) return null;
+  return el.animate(keyframes, options);
+}
+function mascotReact() {
+  const wrap = $('mascot-wrap'), bang = $('mascot-bang');
+  if (!wrap) return;
+  animate(wrap, [{transform:'translateY(0)'}, {transform:'translateY(-16px)'}, {transform:'translateY(0) scale(1.08,.9)'}, {transform:'translateY(0)'}], {duration:440, easing:'ease-out'});
+  if (bang) {
+    bang.hidden = false;
+    animate(bang, [{transform:'scale(0)', opacity:0}, {transform:'scale(1.3)', opacity:1}, {transform:'scale(1)', opacity:1}], {duration:240, easing:'ease-out'});
+    clearTimeout(bang._t);
+    bang._t = setTimeout(() => { bang.hidden = true; }, 1400);
+  }
+}
 function getTheme() {
   const saved = localStorage.getItem('hookdesk_theme');
   if (saved === 'dark' || saved === 'light') return saved;
@@ -272,20 +318,36 @@ function renderList() {
   const box = $('list'); box.replaceChildren();
   $('count').textContent = items.length + (hasMore ? '+' : '');
   if (!items.length) { const p = document.createElement('p'); p.className = 'empty'; p.textContent = 'Belum ada request masuk.'; box.append(p); }
+  let anyNew = false;
   for (const request of items) {
     const button = document.createElement('button'); button.className = 'request'; button.setAttribute('aria-pressed', String(selected?.id === request.id));
     const method = document.createElement('span'); method.className = 'method'; method.textContent = request.method;
     const time = document.createElement('small'); time.textContent = new Date(request.created_at).toLocaleTimeString();
     const path = document.createElement('span'); path.className = 'path'; path.textContent = request.path + ' | ' + request.size + ' B';
     button.append(method, time, path); button.onclick = () => select(request.id).catch(error); box.append(button);
+    if (!firstRender && request.id > knownMax) {
+      anyNew = true;
+      animate(button, [{opacity:0, transform:'translateY(-8px)'}, {opacity:1, transform:'translateY(0)'}], {duration:220, easing:'ease-out'});
+      animate(button, [{filter:'brightness(1.45)'}, {filter:'brightness(1)'}], {duration:700, easing:'ease-out'});
+    }
   }
+  if (anyNew) mascotReact();
+  if (items.length) knownMax = items[0].id;
+  firstRender = false;
   $('more').hidden = !hasMore;
 }
 async function select(id) {
   const version = ++selectionVersion;
   const result = await api(base() + '/' + id);
   if (version !== selectionVersion) return;
+  const changed = !selected || selected.id !== id;
+  const oldReq = selected;
+  const oldText = (changed && oldReq && (oldReq.size || 0) <= 20000) ? ($('inspector').innerText || '') : '';
   selected = result; renderList(); renderDetail();
+  if (changed) {
+    const newText = ((result.size || 0) <= 20000) ? ($('inspector').innerText || '') : '';
+    inspectorTransition(oldText, newText);
+  }
 }
 function tableRows(id, rows) {
   const target = $(id); target.replaceChildren();
@@ -324,6 +386,8 @@ function renderBody() {
   if (!selected) return;
   let content = selected.body;
   const mode = $('body-mode').value;
+  const modeChanged = lastBodyMode !== null && lastBodyMode !== mode;
+  lastBodyMode = mode;
   let description = header('content-type') || 'Content-Type tidak dikirim';
   if (mode === 'pretty' && selected.size) {
     try { content = JSON.stringify(JSON.parse(content), null, 2); description += ' | JSON formatted'; }
@@ -340,6 +404,7 @@ function renderBody() {
   $('body-description').textContent = description + ' | ' + selected.size + ' bytes';
   $('body-content').textContent = selected.size ? content : 'No content. Request ini tidak mengirim body.';
   $('copy-body').disabled = !selected.size;
+  if (modeChanged) animate($('body-content'), [{opacity:.35}, {opacity:1}], {duration:160, easing:'ease-out'});
 }
 function locationText(location) {
   if (!location) return 'Belum tersedia';
@@ -359,7 +424,7 @@ async function refresh() {
 }
 async function copyText(value, button) {
   const label = button.textContent;
-  try { await navigator.clipboard.writeText(value); button.textContent = 'Tersalin'; setTimeout(() => button.textContent = label, 1500); }
+  try { await navigator.clipboard.writeText(value); button.textContent = 'Tersalin'; animate(button, [{transform:'scale(1)'}, {transform:'scale(1.06)'}, {transform:'scale(1)'}], {duration:220, easing:'ease-out'}); setTimeout(() => button.textContent = label, 1500); }
   catch { error(new Error('Clipboard tidak tersedia. Pilih teks dan salin lewat browser.')); }
 }
 $('copy').onclick = () => copyText($('url').value, $('copy'));
@@ -388,6 +453,136 @@ $('download').onclick = () => {
   const url = URL.createObjectURL(new Blob([raw], {type:'application/octet-stream'}));
   const link = document.createElement('a'); link.href = url; link.download = 'request-' + selected.id + '.bin'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
+function inspectorTransition(oldText, newText) {
+  const stage = $('inspector'), fx = $('inspector-fx');
+  if (!stage || !fx || reduceMotion) return;
+  if (oldText === newText) return;
+  if (newText.length > 6000 || (oldText || '').length > 6000) return;
+  const cs = getComputedStyle(document.documentElement);
+  const accent = (cs.getPropertyValue('--stickman') || cs.getPropertyValue('--accent') || '#16a34a').trim();
+  const bg = (cs.getPropertyValue('--surface') || '#ffffff').trim();
+  const W = stage.clientWidth, H = stage.clientHeight;
+  if (W < 40 || H < 40) return;
+  const font = '12px ui-monospace, Consolas, monospace';
+  const lineHeight = 12 * 1.7;
+  const contentW = W - 36;
+
+  const oldParticles = oldText ? renderSample(oldText, W, H, contentW, font, lineHeight, 1200) : [];
+  const newParticles = renderSample(newText, W, H, contentW, font, lineHeight, 2600);
+  if (!newParticles.length) return;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  fx.width = Math.round(W * dpr); fx.height = Math.round(H * dpr);
+  fx.style.width = W + 'px'; fx.style.height = H + 'px';
+  const ctx = fx.getContext('2d');
+  fx.hidden = false;
+
+  const olds = oldParticles.map(p => ({ x: p.x, y: p.y, vx: (Math.random() - 0.5) * 2.4, vy: (Math.random() - 0.5) * 2.4 - 0.8, a: 0.7 + Math.random() * 0.3 }));
+  const news = newParticles.map(p => ({ sx: Math.random() * W, sy: Math.random() * H, tx: p.x, ty: p.y, delay: Math.random() * 0.16 }));
+
+  const start = performance.now(), dur = 760;
+  function draw(now) {
+    const t = (now - start) / dur;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = accent;
+    if (t < 0.28) {
+      const p = t / 0.28;
+      ctx.globalAlpha = 1 - p;
+      for (const o of olds) ctx.fillRect(o.x + o.vx * p * 70, o.y + o.vy * p * 70, 1.6, 1.6);
+      ctx.globalAlpha = 1;
+    }
+    const pt = (t - 0.22) / 0.78;
+    if (pt > 0) {
+      for (const n of news) {
+        const e = Math.min(1, Math.max(0, (pt - n.delay) / (1 - n.delay)));
+        if (e <= 0) continue;
+        const ease = 1 - Math.pow(1 - e, 3);
+        const x = n.sx + (n.tx - n.sx) * ease;
+        const y = n.sy + (n.ty - n.sy) * ease;
+        ctx.globalAlpha = Math.min(1, e * 1.6);
+        ctx.fillRect(x, y, 1.6, 1.6);
+      }
+      ctx.globalAlpha = 1;
+    }
+    if (t < 1) { requestAnimationFrame(draw); return; }
+    const f0 = performance.now();
+    (function fade(now2) {
+      const ft = (now2 - f0) / 180;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = accent;
+      ctx.globalAlpha = Math.max(0, 1 - ft);
+      for (const n of news) ctx.fillRect(n.tx, n.ty, 1.6, 1.6);
+      ctx.globalAlpha = 1;
+      if (ft < 1) requestAnimationFrame(fade);
+      else { ctx.clearRect(0, 0, W, H); fx.hidden = true; }
+    })(performance.now());
+  }
+  requestAnimationFrame(draw);
+}
+function renderSample(text, W, H, contentW, font, lineHeight, maxCount) {
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.font = font; ctx.textBaseline = 'top'; ctx.fillStyle = '#000';
+  const margin = 18;
+  const lines = wrapText(ctx, text, contentW);
+  let y = margin;
+  for (const line of lines) { if (y > H - margin) break; ctx.fillText(line, margin, y); y += lineHeight; }
+  return sampleParticles(ctx, W, H, maxCount);
+}
+function wrapText(ctx, text, maxWidth) {
+  const out = [];
+  for (const raw of text.split('\n')) {
+    if (raw === '') { out.push(''); continue; }
+    let line = '';
+    for (const ch of raw) {
+      if (line && ctx.measureText(line + ch).width > maxWidth) { out.push(line); line = ch; }
+      else line += ch;
+    }
+    out.push(line);
+  }
+  return out;
+}
+function sampleParticles(ctx, W, H, maxCount) {
+  const data = ctx.getImageData(0, 0, W, H).data;
+  let occupied = 0;
+  for (let i = 3; i < data.length; i += 4) if (data[i] > 128) occupied++;
+  if (!occupied) return [];
+  const step = Math.max(1, Math.ceil(Math.sqrt(occupied / maxCount)));
+  const out = [];
+  for (let y = 0; y < H; y += step) for (let x = 0; x < W; x += step) {
+    if (data[(y * W + x) * 4 + 3] > 128) out.push({ x, y });
+  }
+  return out;
+}
+function typewriter() {
+  const hookEl = $('brand-hook'), deskEl = $('brand-desk');
+  if (!hookEl || !deskEl) return;
+  if (reduceMotion) { hookEl.textContent = 'hook'; deskEl.textContent = 'desk'; return; }
+  const caret = document.createElement('span');
+  caret.className = 'brand-caret';
+  caret.setAttribute('aria-hidden', 'true');
+  deskEl.after(caret);
+  const words = ['hook', 'desk'];
+  const full = words.join('').length;
+  let len = 0, dir = 1;
+  const tick = () => {
+    len += dir;
+    if (len >= full) dir = -1;
+    else if (len <= 0) dir = 1;
+    let remaining = len;
+    for (let w = 0; w < words.length; w++) {
+      const take = Math.max(0, Math.min(words[w].length, remaining));
+      (w === 0 ? hookEl : deskEl).textContent = words[w].slice(0, take);
+      remaining -= take;
+    }
+    const delay = len === full ? 2400 : len === 0 ? 500 : 65 + Math.random() * 70;
+    setTimeout(tick, delay);
+  };
+  setTimeout(tick, 500);
+}
 async function init() {
   try {
     $('theme-toggle').onclick = toggleTheme;
@@ -408,6 +603,7 @@ async function init() {
   } catch (e) { error(e); $('status').textContent = 'Endpoint tidak tersedia'; }
 }
 init();
+typewriter();
 </script>
 </body>
 </html>
