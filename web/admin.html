@@ -3,14 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="light dark">
   <title>Hookdesk Admin</title>
+  <script>
+  (function(){
+    try{
+      var s=localStorage.getItem('hookdesk_theme');
+      var d=window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme',s==='dark'||(!s&&d)?'dark':'light');
+    }catch(e){}
+  })();
+  </script>
   <link rel="stylesheet" href="/admin.css">
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
   <div id="login-view" class="hidden min-h-screen items-center justify-center px-4 py-10">
     <main class="w-full max-w-md">
-      <a class="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-950" href="/" aria-label="Kembali ke Hookdesk"><span class="brand-mark">H</span> Hookdesk</a>
+      <div class="mb-8 flex items-center justify-between">
+        <a class="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-950" href="/" aria-label="Kembali ke Hookdesk"><span class="brand-mark">H</span> Hookdesk</a>
+        <button id="login-theme-toggle" class="button-secondary text-xs" type="button" aria-label="Ganti mode gelap/terang" title="Ganti mode gelap/terang">
+          <span class="theme-icon inline-flex items-center" aria-hidden="true">
+            <svg class="icon-moon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          </span>
+          <span id="login-theme-text" class="ml-1.5">Mode gelap</span>
+        </button>
+      </div>
       <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Admin console</p>
         <h1 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Masuk ke CMS</h1>
@@ -36,7 +54,20 @@
       <div class="hidden px-5 pt-8 lg:block"><p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Workspace</p><p class="mt-3 text-xs leading-5 text-slate-500">Kelola endpoint dan aktivitas callback di server ini.</p></div>
     </aside>
     <div class="min-w-0">
-      <header class="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-7"><div><p class="text-xs text-slate-500">Workspace / Monitoring</p></div><div class="flex items-center gap-3"><span class="hidden text-sm text-slate-600 sm:inline">Admin</span><button id="logout-button" class="button-secondary">Keluar</button></div></header>
+      <header class="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-7">
+        <div><p class="text-xs text-slate-500">Workspace / Monitoring</p></div>
+        <div class="flex items-center gap-3">
+          <span class="hidden text-sm text-slate-600 sm:inline">Admin</span>
+          <button id="admin-theme-toggle" class="button-secondary" type="button" aria-label="Ganti mode gelap/terang" title="Ganti mode gelap/terang">
+            <span class="theme-icon inline-flex items-center" aria-hidden="true">
+              <svg class="icon-moon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+              <svg class="icon-sun" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </span>
+            <span id="admin-theme-text" class="hidden sm:inline sm:ml-1.5">Mode gelap</span>
+          </button>
+          <button id="logout-button" class="button-secondary">Keluar</button>
+        </div>
+      </header>
       <main id="overview" class="mx-auto max-w-[1440px] px-4 py-7 sm:px-7 sm:py-9">
         <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Monitoring</p><h1 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-[28px]">Endpoint webhook</h1><p class="mt-2 text-sm text-slate-600">Pantau endpoint, callback terakhir, dan bersihkan URL yang sudah tidak dipakai.</p></div><button id="refresh-button" class="button-secondary self-start sm:self-auto">Muat ulang</button></div>
         <div class="mt-7 grid gap-4 sm:grid-cols-2">
@@ -58,6 +89,23 @@
   <script>
   'use strict';
   const $=id=>document.getElementById(id);let page=1,query='',loading=false;
+  function getTheme(){const saved=localStorage.getItem('hookdesk_theme');if(saved==='dark'||saved==='light')return saved;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme',theme);
+    const isDark=theme==='dark';
+    const text=isDark?'Mode terang':'Mode gelap';
+    const title=isDark?'Ganti ke mode terang':'Ganti ke mode gelap';
+    if($('admin-theme-text'))$('admin-theme-text').textContent=text;
+    if($('admin-theme-toggle')){$('admin-theme-toggle').setAttribute('aria-label',title);$('admin-theme-toggle').title=title;}
+    if($('login-theme-text'))$('login-theme-text').textContent=text;
+    if($('login-theme-toggle')){$('login-theme-toggle').setAttribute('aria-label',title);$('login-theme-toggle').title=title;}
+  }
+  function toggleTheme(){
+    const current=document.documentElement.getAttribute('data-theme')||getTheme();
+    const next=current==='dark'?'light':'dark';
+    try{localStorage.setItem('hookdesk_theme',next)}catch(e){}
+    applyTheme(next);
+  }
   async function api(path,options={}){const response=await fetch(path,{...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});if(response.status===401&&path!=='/api/admin/login'){showLogin();throw new Error('Sesi admin sudah berakhir. Silakan login lagi.')}const data=response.status===204?null:await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Request gagal ('+response.status+').');return data}
   function toast(message){const node=$('toast');node.textContent=message;node.classList.remove('hidden');clearTimeout(toast.timer);toast.timer=setTimeout(()=>node.classList.add('hidden'),3200)}
   function showLogin(){ $('cms-view').classList.add('hidden');$('login-view').classList.remove('hidden');$('login-view').classList.add('flex'); }
@@ -75,6 +123,10 @@
   $('login-form').onsubmit=async event=>{event.preventDefault();const button=$('login-button');button.disabled=true;$('login-error').textContent='';try{await api('/api/admin/login',{method:'POST',body:JSON.stringify({username:$('username').value,password:$('password').value})});$('password').value='';showCMS()}catch(err){$('login-error').textContent=err.message;if(err.message.includes('belum dikonfigurasi')||err.message.includes('minimal 16 karakter'))$('setup-message').classList.remove('hidden')}finally{button.disabled=false}};
   $('logout-button').onclick=async()=>{try{await api('/api/admin/logout',{method:'POST'});showLogin();toast('Berhasil keluar.')}catch(err){toast(err.message)}};
   $('search-form').onsubmit=event=>{event.preventDefault();query=$('search').value.trim();page=1;load()};$('refresh-button').onclick=()=>load();$('previous-page').onclick=()=>{if(page>1){page--;load()}};$('next-page').onclick=()=>{page++;load()};
+  if($('admin-theme-toggle'))$('admin-theme-toggle').onclick=toggleTheme;
+  if($('login-theme-toggle'))$('login-theme-toggle').onclick=toggleTheme;
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',e=>{if(!localStorage.getItem('hookdesk_theme'))applyTheme(e.matches?'dark':'light')});
+  applyTheme(document.documentElement.getAttribute('data-theme')||getTheme());
   async function init(){try{await api('/api/admin/summary');showCMS()}catch(err){showLogin();if(err.message.includes('belum dikonfigurasi')){$('setup-message').classList.remove('hidden');$('login-form').classList.add('hidden')}}}
   init();
   </script>

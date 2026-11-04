@@ -146,3 +146,44 @@ func TestHTMLTextEncoding(t *testing.T) {
 		}
 	}
 }
+
+func TestDarkModeAssets(t *testing.T) {
+	requiredInspector := []string{
+		`data-theme="dark"`,
+		`prefers-color-scheme:dark`,
+		`id="theme-toggle"`,
+		`hookdesk_theme`,
+		`content="light dark"`,
+	}
+	for _, item := range requiredInspector {
+		if !strings.Contains(string(page), item) {
+			t.Fatalf("index.html missing dark mode asset: %s", item)
+		}
+	}
+
+	adminHTML, err := adminAssets.ReadFile("web/admin.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !utf8.Valid(adminHTML) {
+		t.Fatal("admin.html must be valid UTF-8")
+	}
+	requiredAdmin := []string{
+		`hookdesk_theme`,
+		`content="light dark"`,
+		`id="admin-theme-toggle"`,
+	}
+	for _, item := range requiredAdmin {
+		if !strings.Contains(string(adminHTML), item) {
+			t.Fatalf("admin.html missing dark mode asset: %s", item)
+		}
+	}
+
+	adminCSS, err := adminAssets.ReadFile("web/admin.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(adminCSS), `data-theme`) {
+		t.Fatal("admin.css missing dark mode theme styles")
+	}
+}
